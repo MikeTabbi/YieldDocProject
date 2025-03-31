@@ -7,8 +7,11 @@ import {
   Platform,
   KeyboardAvoidingView,
   Modal,
+  Text,
+  ScrollView,
+  Pressable,
 } from 'react-native';
-import { Send, Camera, Image as ImageIcon } from 'lucide-react-native';
+import { Send, Camera, Image as ImageIcon, PlusCircle } from 'lucide-react-native';
 import { colors, spacing, shadows } from '@/constants/theme';
 import CameraCapture from './CameraCapture';
 import * as ImagePicker from 'expo-image-picker';
@@ -19,6 +22,17 @@ interface ChatInputProps {
   isLoading?: boolean;
 }
 
+const plantSymptoms = [
+  'Yellowing Leaves',
+  'Wilting',
+  'Spots on Leaves',
+  'Stunted Growth',
+  'Dropping Leaves',
+  'Curling Leaves',
+  'White Powdery Substance',
+  'Mold/Fungus',
+];
+
 export default function ChatInput({
   onSendMessage,
   onSendImage,
@@ -26,12 +40,30 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [showCamera, setShowCamera] = useState(false);
+  const [showSymptoms, setShowSymptoms] = useState(false);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const inputRef = useRef<TextInput>(null);
 
+
+  const cleanMessageContent = (text: string) => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1') // remove bold
+    .replace(/\*(.*?)\*/g, '$1')     // remove italic
+    .replace(/^- /gm, '• ')          // replace dash bullets with dot
+    .replace(/^#+ /gm, '')           // remove markdown headers
+    .trim();
+};
+
   const handleSend = () => {
-    if (message.trim()) {
-      onSendMessage(message.trim());
+    let finalMessage = message.trim();
+    if (selectedSymptoms.length > 0) {
+      finalMessage =
+        `Symptoms: ${selectedSymptoms.join(', ')}\n` + finalMessage;
+    }
+    if (finalMessage) {
+      onSendMessage(finalMessage);
       setMessage('');
+      setSelectedSymptoms([]);
       inputRef.current?.focus();
     }
   };
@@ -44,10 +76,7 @@ export default function ChatInput({
   const handlePickImage = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (!permission.granted) {
-        return;
-      }
+      if (!permission.granted) return;
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images',
@@ -62,6 +91,14 @@ export default function ChatInput({
     } catch (error) {
       console.error('Error picking image:', error);
     }
+  };
+
+  const toggleSymptom = (symptom: string) => {
+    setSelectedSymptoms((prev) =>
+      prev.includes(symptom)
+        ? prev.filter((s) => s !== symptom)
+        : [...prev, symptom]
+    );
   };
 
   return (
@@ -83,6 +120,12 @@ export default function ChatInput({
               disabled={isLoading}>
               <ImageIcon size={24} color={colors.text} />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setShowSymptoms(true)}
+              disabled={isLoading}>
+              <PlusCircle size={24} color={colors.text} />
+            </TouchableOpacity>
           </View>
           <TextInput
             ref={inputRef}
@@ -98,22 +141,57 @@ export default function ChatInput({
           <TouchableOpacity
             style={[styles.button, styles.sendButton]}
             onPress={handleSend}
-            disabled={!message.trim() || isLoading}>
+            disabled={!message.trim() && selectedSymptoms.length === 0 || isLoading}>
             <Send
               size={24}
-              color={message.trim() ? colors.text : 'rgba(0,0,0,0.3)'}
+              color={
+                message.trim() || selectedSymptoms.length > 0
+                  ? colors.text
+                  : 'rgba(0,0,0,0.3)'
+              }
             />
           </TouchableOpacity>
         </View>
 
-        <Modal
-          visible={showCamera}
-          animationType="slide"
-          presentationStyle="fullScreen">
+        {/* Camera Modal */}
+        <Modal visible={showCamera} animationType="slide" presentationStyle="fullScreen">
           <CameraCapture
             onImageCaptured={handleImageCaptured}
             onClose={() => setShowCamera(false)}
           />
+        </Modal>
+
+        {/* Symptom Selector Modal */}
+        <Modal visible={showSymptoms} animationType="fade" transparent>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowSymptoms(false)}>
+            <Pressable style={styles.symptomModal} onPress={() => {}}>
+              <Text style={styles.modalTitle}>Select Plant Symptoms</Text>
+              <ScrollView>
+                {plantSymptoms.map((symptom, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.symptomOption,
+                      selectedSymptoms.includes(symptom) && styles.selectedSymptom,
+                    ]}
+                    onPress={() => toggleSymptom(symptom)}>
+                    <Text
+                      style={[
+                        styles.symptomText,
+                        selectedSymptoms.includes(symptom) && { color: 'white' },
+                      ]}>
+                      {symptom}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                style={[styles.button, styles.sendButton, { marginTop: spacing.md }]}
+                onPress={() => setShowSymptoms(false)}>
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>Done</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
         </Modal>
       </View>
     </KeyboardAvoidingView>
@@ -155,5 +233,36 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     backgroundColor: colors.primary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  symptomModal: {
+    backgroundColor: 'white',
+    width: '85%',
+    padding: spacing.lg,
+    borderRadius: 12,
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  symptomOption: {
+    padding: spacing.sm,
+    borderRadius: 8,
+    marginBottom: spacing.xs,
+    backgroundColor: '#f0f0f0',
+  },
+  selectedSymptom: {
+    backgroundColor: colors.primary,
+  },
+  symptomText: {
+    color: '#333',
   },
 });

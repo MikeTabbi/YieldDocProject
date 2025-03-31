@@ -8,8 +8,18 @@ interface ChatMessageProps {
   message: Message;
 }
 
+const cleanMessageContent = (text: string) => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+    .replace(/\*(.*?)\*/g, '$1')     // Remove italic markdown
+    .replace(/^- /gm, '• ')          // Replace dash bullets with dot
+    .replace(/^#+ /gm, '')           // Remove markdown headers
+    .trim();
+};
+
 export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.sender === 'user';
+  const cleanedContent = cleanMessageContent(message.content);
 
   return (
     <View style={[styles.container, isUser ? styles.userContainer : styles.botContainer]}>
@@ -21,10 +31,18 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             resizeMode="cover"
           />
         )}
-        <Text style={[styles.text, isUser ? styles.userText : styles.botText]}>
-          {message.content}
-        </Text>
-        <Text style={[styles.timestamp, isUser ? styles.userTimestamp : styles.botTimestamp]}>
+        {cleanedContent.split('\n').map((line, index) => (
+          <Text
+            key={index}
+            style={[styles.text, isUser ? styles.userText : styles.botText]}>
+            {line}
+          </Text>
+        ))}
+        <Text
+          style={[
+            styles.timestamp,
+            isUser ? styles.userTimestamp : styles.botTimestamp,
+          ]}>
           {format(message.timestamp, 'HH:mm')}
         </Text>
       </View>
@@ -60,6 +78,7 @@ const styles = StyleSheet.create({
   },
   text: {
     ...typography.body,
+    marginBottom: 4,
   },
   userText: {
     color: colors.text,
