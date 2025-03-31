@@ -15,35 +15,35 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: '',
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="scan"
         options={{
-          title: 'Scan',
+          title: '',
           tabBarIcon: ({ color, size }) => <Camera size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="records"
         options={{
-          title: 'Records',
+          title: '',
           tabBarIcon: ({ color, size }) => <History size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'Chat',
+          title: '',
           tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: '',
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
