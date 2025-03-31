@@ -22,7 +22,44 @@ const mockData = {
       ],
     },
   },
+  '2': {
+    id: '2',
+    date: new Date('2024-02-19'),
+    cropType: 'Lettuce',
+    healthScore: 88,
+    imageUrl: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?q=80&w=800&auto=format&fit=crop',
+    details: {
+      soilMoisture: '65%',
+      sunlight: '70%',
+      airQuality: '85%',
+      temperature: '20°C',
+      recommendations: [
+        'Increase sunlight exposure slightly',
+        'Ensure soil remains well-drained',
+        'Watch for signs of mildew',
+      ],
+    },
+  },
+  '3': {
+    id: '3',
+    date: new Date('2024-02-18'),
+    cropType: 'Corn',
+    healthScore: 92,
+    imageUrl: 'https://images.unsplash.com/photo-1601472122408-78885d2ca00b?q=80&w=800&auto=format&fit=crop',
+    details: {
+      soilMoisture: '80%',
+      sunlight: '95%',
+      airQuality: '88%',
+      temperature: '27°C',
+      recommendations: [
+        'Maintain high sunlight exposure',
+        'Check for nutrient deficiencies',
+        'Prepare for possible harvest window',
+      ],
+    },
+  },
 };
+
 
 export default function ScanDetailScreen() {
   const { id } = useLocalSearchParams();
